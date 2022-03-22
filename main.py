@@ -1,5 +1,5 @@
 import csv
-
+import random
 
 
 def load_data(path):
@@ -8,26 +8,38 @@ def load_data(path):
         csv_reader = csv.reader(file, delimiter=' ')
         for row in csv_reader:
             list_of_rows.append(row)
-            #print(row)
 
     return list_of_rows
 
+
 list_of_rows = load_data('test.txt')
 
-first_row = list_of_rows[0][0]
+SIZE = int(list_of_rows[0][0])
 
 
 def create_matrix(list_of_rows):
-    size = int(list_of_rows[0][0])
-    matrix = [[None] * size for _ in range(size)]
-    for i in range(size):
-        for j in range(size):
+    matrix = [[None] * SIZE for _ in range(SIZE)]
+    for i in range(SIZE):
+        for j in range(SIZE):
             if j <= i:
-                matrix[i][j] = list_of_rows[i + 1][j]
+                matrix[i][j] = int(list_of_rows[i + 1][j])
             else:
-                matrix[i][j] = list_of_rows[j + 1][i]
+                matrix[i][j] = int(list_of_rows[j + 1][i])
     return matrix
+
+
+def generate_population_array():
+    array = []
+    population = []
+    for i in range(SIZE):
+        array.append(i)
+    for i in range(SIZE):
+        population.append(random.shuffle(array))
+    return population
 
 matrix = create_matrix(list_of_rows)
 
-print(matrix)
+
+
+# for row in matrix:
+#     print(row)
