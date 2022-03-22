@@ -34,12 +34,12 @@ def generate_population_array():
     for i in range(SIZE):
         array.append(i)
     for i in range(SIZE):
-        population.append(random.shuffle(array))
+        random.shuffle(array)
+        population.append(array[:])
     return population
+
 
 matrix = create_matrix(list_of_rows)
 
+my_list = generate_population_array()
 
-
-# for row in matrix:
-#     print(row)
