@@ -11,12 +11,6 @@ def load_data(path):
 
     return list_of_rows
 
-
-list_of_rows = load_data('test.txt')
-
-SIZE = int(list_of_rows[0][0])
-
-
 def create_matrix(list_of_rows):
     matrix = [[None] * SIZE for _ in range(SIZE)]
     for i in range(SIZE):
@@ -38,8 +32,24 @@ def generate_population_array():
         population.append(array[:])
     return population
 
+def count_population_score(matrix, population):
+    scores_array = []
+    for i in range(SIZE):
+        sum = 0
+        for j in range(SIZE):
+            index = population[i][j]
+            sum += matrix[i][index]
+        scores_array.append(sum)
+    return scores_array
+
+
+list_of_rows = load_data('test.txt')
+
+SIZE = int(list_of_rows[0][0])
 
 matrix = create_matrix(list_of_rows)
 
-my_list = generate_population_array()
+population = generate_population_array()
+
+count_population_score(matrix, population)
 
