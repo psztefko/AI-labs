@@ -46,19 +46,45 @@ def count_population_scores(matrix, population):
     return scores_array
 
 
-def selection(population, scores, selection_pressure=3):
-
+def tournament_selection(population, scores, selection_pressure=3):
     best_individual = []
     best_score = sys.maxsize
 
     random_indexes = random.sample(range(0, POPULATION), selection_pressure)
 
     for index in random_indexes:
-
         if scores[index] < best_score:
             best_individual = population[index]
 
     return best_individual
+
+
+def crossover(individual1, individual2):
+
+    p1 = individual1
+    p2 = individual2
+    print(p1)
+    print(p2)
+    cxpoint1 = random.randint(0, SIZE)
+    cxpoint2 = random.randint(0, SIZE - 1)
+    if cxpoint2 >= cxpoint1:
+        cxpoint2 += 1
+    else:  # Swap the two cx points
+        cxpoint1, cxpoint2 = cxpoint2, cxpoint1
+
+    # Apply crossover between cx points
+    for i in range(cxpoint1, cxpoint2):
+        # Keep track of the selected values
+        temp1 = individual1[i]
+        temp2 = individual2[i]
+        # Swap the matched value
+        individual1[i], individual1[p1[temp2]] = temp2, temp1
+        individual2[i], individual2[p2[temp1]] = temp1, temp2
+        # Position bookkeeping
+        p1[temp1], p1[temp2] = p1[temp2], p1[temp1]
+        p2[temp1], p2[temp2] = p2[temp2], p2[temp1]
+
+    return individual1, individual2
 
 
 list_of_rows = load_data('test.txt')
@@ -73,4 +99,6 @@ population = generate_population_array()
 
 scores = count_population_scores(distance_matrix, population)
 
-selection(population, scores)
+tournament_winners = [tournament_selection(population, scores) for _ in range(POPULATION)]
+
+crossover(tournament_selection(population, scores), tournament_selection(population, scores))
