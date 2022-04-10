@@ -36,13 +36,13 @@ def generate_population_array():
     return population
 
 
-def count_population_scores(matrix, population) -> List:
+def count_population_scores(population) -> List:
     scores_array = []
     for i in range(POPULATION_SIZE):
         sum = 0
         for j in range(INDIVIDUAL_SIZE):
             index = population[i % 5][j]
-            sum += matrix[i % 5][index]
+            sum += DISTANCE_MATRIX[i % 5][index]
         scores_array.append(sum)
     return scores_array
 
@@ -104,26 +104,30 @@ def perform_mutation(individual, mutation_rate=0.3):
 
     return individual
 
-list_of_rows = load_data('test.txt')
 
+list_of_rows = load_data('berlin52.txt')
 INDIVIDUAL_SIZE = int(list_of_rows[0][0])
 POPULATION_SIZE = 200
 MUTATION_RATE = 0.3
 SELECTION_PRESSURE = 3
-
-distance_matrix = create_distances_matrix(list_of_rows)
+DISTANCE_MATRIX = create_distances_matrix(list_of_rows)
 
 population = generate_population_array()
+generation_counter = 0
+while True:
+    generation_counter += 1
 
-scores = count_population_scores(distance_matrix, population)
+    scores = count_population_scores(population)
 
-tournament_winners = [tournament_selection(population, scores) for _ in range(POPULATION_SIZE)]
+    tournament_winners = [tournament_selection(population, scores) for _ in range(POPULATION_SIZE)]
 
-population_after_crossover = []
-for i in range(0, len(population) - 1, 2):
-    temp_tuple = (crossover(tournament_winners[i], tournament_winners[i + 1]))
-    population_after_crossover.append(temp_tuple[0])
-    population_after_crossover.append(temp_tuple[1])
+    final_population = []
+    for i in range(0, len(population) - 1, 2):
+        temp_tuple = (crossover(tournament_winners[i], tournament_winners[i + 1]))
+        final_population.append(perform_mutation(temp_tuple[0]))
+        final_population.append(perform_mutation(temp_tuple[1]))
 
-print(population_after_crossover[0])
-print(perform_mutation(population_after_crossover[0]))
+    final_score = count_population_scores(final_population)
+
+    print(f'Generation: ', generation_counter)
+    print(f'Score: ', sum(final_score))
