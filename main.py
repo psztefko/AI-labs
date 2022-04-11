@@ -118,20 +118,9 @@ def makeSinglePointCrossover(population: List):
 
 def perform_mutation(individual, mutation_rate=0.3):
     if random.random() < MUTATION_RATE:
-        if INDIVIDUAL_SIZE % 2 != 0:
-            subversion_amount = random.randint(2, (INDIVIDUAL_SIZE - 1)/2)
-        else:
-            subversion_amount = random.randint(2, INDIVIDUAL_SIZE / 2)
-
-        if subversion_amount % 2 != 0:
-            subversion_amount -= 1
-
         subversion_indexes = random.sample(
-            range(0, INDIVIDUAL_SIZE), subversion_amount)
-
-        for i in range(0, subversion_amount - 1, 2):
-            individual[subversion_indexes[i]], individual[subversion_indexes[i + 1]
-                                                          ] = individual[subversion_indexes[i + 1]], individual[subversion_indexes[i]]
+            range(0, INDIVIDUAL_SIZE), 2)
+        individual[subversion_indexes[0]], individual[subversion_indexes[1]] = individual[subversion_indexes[1]], individual[subversion_indexes[0]]
 
     return individual
 
