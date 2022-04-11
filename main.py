@@ -41,8 +41,8 @@ def count_population_scores(population) -> List:
     for i in range(POPULATION_SIZE):
         sum = 0
         for j in range(INDIVIDUAL_SIZE):
-            index = population[i % 5][j]
-            sum += DISTANCE_MATRIX[i % 5][index]
+            index = population[i % INDIVIDUAL_SIZE][j]
+            sum += DISTANCE_MATRIX[i % INDIVIDUAL_SIZE][index]
         scores_array.append(sum)
     return scores_array
 
@@ -104,30 +104,43 @@ def perform_mutation(individual, mutation_rate=0.3):
 
     return individual
 
+def find_best_score(population):
+    best_score = sys.maxsize
+
+    for i in range(POPULATION_SIZE):
+        current_individual = 0
+        for j in range(INDIVIDUAL_SIZE):
+            index = population[i % 5][j]
+            current_individual += DISTANCE_MATRIX[i % 5][index]
+        if current_individual < best_score:
+            best_score = current_individual
+
+    return best_score
+
+def tsa(population):
+    scores = count_population_scores(population)
+
+    tournament_winners = [tournament_selection(population, scores) for _ in range(POPULATION_SIZE)]
+    population.clear()
+    for i in range(0, POPULATION_SIZE - 1, 2):
+        temp_tuple = (crossover(tournament_winners[i], tournament_winners[i + 1]))
+        population.append(perform_mutation(temp_tuple[0]))
+        population.append(perform_mutation(temp_tuple[1]))
+
+    return population
 
 list_of_rows = load_data('berlin52.txt')
 INDIVIDUAL_SIZE = int(list_of_rows[0][0])
 POPULATION_SIZE = 200
-MUTATION_RATE = 0.3
+MUTATION_RATE = 0.03
 SELECTION_PRESSURE = 3
 DISTANCE_MATRIX = create_distances_matrix(list_of_rows)
 
 population = generate_population_array()
-generation_counter = 0
-while True:
-    generation_counter += 1
 
-    scores = count_population_scores(population)
+for i in range(10000):
 
-    tournament_winners = [tournament_selection(population, scores) for _ in range(POPULATION_SIZE)]
+    population = tsa(population)
 
-    final_population = []
-    for i in range(0, len(population) - 1, 2):
-        temp_tuple = (crossover(tournament_winners[i], tournament_winners[i + 1]))
-        final_population.append(perform_mutation(temp_tuple[0]))
-        final_population.append(perform_mutation(temp_tuple[1]))
-
-    final_score = count_population_scores(final_population)
-
-    print(f'Generation: ', generation_counter)
-    print(f'Score: ', sum(final_score))
+    print(f'Generation: ', i + 1)
+    print(f'Score: ', find_best_score(population))
