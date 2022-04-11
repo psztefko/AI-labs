@@ -47,11 +47,25 @@ def count_population_scores(population) -> List:
     return scores_array
 
 
+def find_best_score(population):
+    best_score = sys.maxsize
+
+    for i in range(POPULATION_SIZE):
+        tempScore = 0
+        for j in range(INDIVIDUAL_SIZE):
+            index = population[i % INDIVIDUAL_SIZE][j]
+            tempScore += DISTANCE_MATRIX[i % INDIVIDUAL_SIZE][index]
+        if tempScore < best_score:
+            best_score = tempScore
+    return best_score
+
+
 def tournament_selection(population, scores, selection_pressure=3) -> List:
     best_individual = []
     best_score = sys.maxsize
 
-    random_indexes = random.sample(range(0, POPULATION_SIZE), selection_pressure)
+    random_indexes = random.sample(
+        range(0, POPULATION_SIZE), selection_pressure)
 
     for index in random_indexes:
         if scores[index] < best_score:
@@ -87,58 +101,65 @@ def crossover(individual1, individual2):
     return individual1, individual2
 
 
+def single_point_crossover(individualA: List, individualB: List):
+    x = random.randint(0, INDIVIDUAL_SIZE)
+
+    new_individualA = individualA[:x] + individualB[x:]
+    new_individualB = individualB[:x] + individualA[x:]
+
+    return new_individualA, new_individualB
+
+
+def makeSinglePointCrossover(population: List):
+    for i in range(0, INDIVIDUAL_SIZE - 1, 2):
+        population[i], population[i +
+                                  1] = single_point_crossover(population[i], population[i+1])
+
+
 def perform_mutation(individual, mutation_rate=0.3):
     if random.random() < MUTATION_RATE:
         if INDIVIDUAL_SIZE % 2 != 0:
             subversion_amount = random.randint(2, (INDIVIDUAL_SIZE - 1)/2)
         else:
-            subversion_amount = random.randint(2, INDIVIDUAL_SIZE/ 2)
+            subversion_amount = random.randint(2, INDIVIDUAL_SIZE / 2)
 
         if subversion_amount % 2 != 0:
             subversion_amount -= 1
 
-        subversion_indexes = random.sample(range(0, INDIVIDUAL_SIZE), subversion_amount)
+        subversion_indexes = random.sample(
+            range(0, INDIVIDUAL_SIZE), subversion_amount)
 
         for i in range(0, subversion_amount - 1, 2):
-            individual[subversion_indexes[i]], individual[subversion_indexes[i + 1]] = individual[subversion_indexes[i + 1]], individual[subversion_indexes[i]]
+            individual[subversion_indexes[i]], individual[subversion_indexes[i + 1]
+                                                          ] = individual[subversion_indexes[i + 1]], individual[subversion_indexes[i]]
 
     return individual
 
-def find_best_score(population):
-    best_score = sys.maxsize
-
-    for i in range(POPULATION_SIZE):
-        current_individual = 0
-        for j in range(INDIVIDUAL_SIZE):
-            index = population[i % 5][j]
-            current_individual += DISTANCE_MATRIX[i % 5][index]
-        if current_individual < best_score:
-            best_score = current_individual
-
-    return best_score
 
 def tsa(population):
     scores = count_population_scores(population)
 
-    tournament_winners = [tournament_selection(population, scores) for _ in range(POPULATION_SIZE)]
-    population.clear()
-    for i in range(0, POPULATION_SIZE - 1, 2):
-        temp_tuple = (crossover(tournament_winners[i], tournament_winners[i + 1]))
-        population.append(perform_mutation(temp_tuple[0]))
-        population.append(perform_mutation(temp_tuple[1]))
+    for i in range(0, POPULATION_SIZE):
+        population[i] = tournament_selection(population, scores)
+
+    makeSinglePointCrossover(population)
+
+    for i in range(0, POPULATION_SIZE):
+        population[i] = perform_mutation(population[i])
 
     return population
+
 
 list_of_rows = load_data('berlin52.txt')
 INDIVIDUAL_SIZE = int(list_of_rows[0][0])
 POPULATION_SIZE = 200
-MUTATION_RATE = 0.03
+MUTATION_RATE = 0.6
 SELECTION_PRESSURE = 3
 DISTANCE_MATRIX = create_distances_matrix(list_of_rows)
 
 population = generate_population_array()
 
-for i in range(10000):
+for i in range(100):
 
     population = tsa(population)
 
