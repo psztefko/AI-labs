@@ -60,45 +60,18 @@ def find_best_score(population):
     return best_score
 
 
-def tournament_selection(population, scores, selection_pressure=3) -> List:
+def tournament_selection(population, scores) -> List:
     best_individual = []
     best_score = sys.maxsize
 
     random_indexes = random.sample(
-        range(0, POPULATION_SIZE), selection_pressure)
+        range(0, POPULATION_SIZE), SELECTIVE_PRESSURE)
 
     for index in random_indexes:
         if scores[index] < best_score:
             best_individual = population[index]
 
     return best_individual
-
-
-def crossover(individual1, individual2):
-
-    p1 = individual1
-    p2 = individual2
-
-    cxpoint1 = random.randint(0, INDIVIDUAL_SIZE)
-    cxpoint2 = random.randint(0, INDIVIDUAL_SIZE - 1)
-    if cxpoint2 >= cxpoint1:
-        cxpoint2 += 1
-    else:  # Swap the two cx points
-        cxpoint1, cxpoint2 = cxpoint2, cxpoint1
-
-    # Apply crossover between cx points
-    for i in range(cxpoint1, cxpoint2):
-        # Keep track of the selected values
-        temp1 = individual1[i]
-        temp2 = individual2[i]
-        # Swap the matched value
-        individual1[i], individual1[p1[temp2]] = temp2, temp1
-        individual2[i], individual2[p2[temp1]] = temp1, temp2
-        # Position bookkeeping
-        p1[temp1], p1[temp2] = p1[temp2], p1[temp1]
-        p2[temp1], p2[temp2] = p2[temp2], p2[temp1]
-
-    return individual1, individual2
 
 
 def single_point_crossover(individualA: List, individualB: List):
@@ -112,12 +85,11 @@ def single_point_crossover(individualA: List, individualB: List):
 
 def makeSinglePointCrossover(population: List):
     for i in range(0, INDIVIDUAL_SIZE - 1, 2):
-        population[i], population[i +
-                                  1] = single_point_crossover(population[i], population[i+1])
+        population[i], population[i + 1] = single_point_crossover(population[i], population[i+1])
 
 
-def perform_mutation(individual, mutation_rate=0.3):
-    if random.random() < MUTATION_RATE:
+def perform_mutation(individual):
+    if random.random() < MUTATION_PROBABILITY:
         subversion_indexes = random.sample(
             range(0, INDIVIDUAL_SIZE), 2)
         individual[subversion_indexes[0]], individual[subversion_indexes[1]] = individual[subversion_indexes[1]], individual[subversion_indexes[0]]
@@ -142,15 +114,19 @@ def tsa(population):
 list_of_rows = load_data('berlin52.txt')
 INDIVIDUAL_SIZE = int(list_of_rows[0][0])
 POPULATION_SIZE = 200
-MUTATION_RATE = 0.6
-SELECTION_PRESSURE = 3
+MUTATION_PROBABILITY = 0.3
+SELECTIVE_PRESSURE = 3
 DISTANCE_MATRIX = create_distances_matrix(list_of_rows)
 
 population = generate_population_array()
-
-for i in range(100):
+best_score = sys.maxsize
+for i in range(1000):
 
     population = tsa(population)
-
+    current_score = find_best_score(population)
+    if current_score < best_score:
+        best_score = current_score
     print(f'Generation: ', i + 1)
-    print(f'Score: ', find_best_score(population))
+    print(f'Score: ', best_score)
+
+print(f'Best score: ', best_score)
