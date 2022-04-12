@@ -3,44 +3,27 @@ import random
 import sys
 from typing import List
 
-#
-# def load_data(path):
-#     list_of_rows = []
-#     with open(path, newline='') as file:
-#         csv_reader = csv.reader(file, delimiter=' ')
-#         for row in csv_reader:
-#             list_of_rows.append(row)
-#
-#     return list_of_rows
-#
-#
-# def create_distances_matrix(list_of_rows):
-#     matrix = [[None] * INDIVIDUAL_SIZE for _ in range(INDIVIDUAL_SIZE)]
-#     for i in range(INDIVIDUAL_SIZE):
-#         for j in range(INDIVIDUAL_SIZE):
-#             if j <= i:
-#                 matrix[i][j] = int(list_of_rows[i + 1][j])
-#             else:
-#                 matrix[i][j] = int(list_of_rows[j + 1][i])
-#     return matrix
 
-def load_data(path: str, delimiter=" ") -> List[List[str]]:
-    with open(path, newline="") as file:
-        return [
-            list(filter(None, row)) for row in csv.reader(file, delimiter=delimiter)
-        ]
+def load_data(path):
+    list_of_rows = []
+    with open(path, newline='') as file:
+        csv_reader = csv.reader(file, delimiter=' ')
+        for row in csv_reader:
+            list_of_rows.append(row)
+
+    return list_of_rows
 
 
-def create_distances_matrix(data: List[List[int]]) -> List[List[int]]:
-    size = int(data[0][0])
-    matrix = [[None] * size for _ in range(size)]
-    for x in range(size):
-        for y in range(size):
-            try:
-                matrix[x][y] = int(data[x + 1][y])
-            except IndexError:
-                matrix[x][y] = int(data[y + 1][x])
+def create_distances_matrix(list_of_rows):
+    matrix = [[None] * INDIVIDUAL_SIZE for _ in range(INDIVIDUAL_SIZE)]
+    for i in range(INDIVIDUAL_SIZE):
+        for j in range(INDIVIDUAL_SIZE):
+            if j <= i:
+                matrix[i][j] = int(list_of_rows[i + 1][j])
+            else:
+                matrix[i][j] = int(list_of_rows[j + 1][i])
     return matrix
+
 
 def generate_population_array():
     array = []
@@ -74,6 +57,7 @@ def find_best_score(population):
             tempScore += DISTANCE_MATRIX[i % INDIVIDUAL_SIZE][index]
         if tempScore < best_score:
             best_score = tempScore
+    print(f'Best score: ', best_score)
     return best_score
 
 
@@ -124,11 +108,6 @@ def perform_mutation(population):
         population[i] = inversion_mutation(population[i])
 
 
-def get_random_index(min: int, max: int) -> int:
-    """Inclusive for both min and max"""
-    return random.randint(min, max)
-
-
 def tsa(population):
     scores = count_population_scores(population)
 
@@ -136,7 +115,6 @@ def tsa(population):
         population[i] = tournament_selection(population, scores)
 
     make_single_point_crossover(population)
-
     perform_mutation(population)
 
     return population
