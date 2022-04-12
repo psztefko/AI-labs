@@ -3,27 +3,44 @@ import random
 import sys
 from typing import List
 
+#
+# def load_data(path):
+#     list_of_rows = []
+#     with open(path, newline='') as file:
+#         csv_reader = csv.reader(file, delimiter=' ')
+#         for row in csv_reader:
+#             list_of_rows.append(row)
+#
+#     return list_of_rows
+#
+#
+# def create_distances_matrix(list_of_rows):
+#     matrix = [[None] * INDIVIDUAL_SIZE for _ in range(INDIVIDUAL_SIZE)]
+#     for i in range(INDIVIDUAL_SIZE):
+#         for j in range(INDIVIDUAL_SIZE):
+#             if j <= i:
+#                 matrix[i][j] = int(list_of_rows[i + 1][j])
+#             else:
+#                 matrix[i][j] = int(list_of_rows[j + 1][i])
+#     return matrix
 
-def load_data(path):
-    list_of_rows = []
-    with open(path, newline='') as file:
-        csv_reader = csv.reader(file, delimiter=' ')
-        for row in csv_reader:
-            list_of_rows.append(row)
-
-    return list_of_rows
+def load_data(path: str, delimiter=" ") -> List[List[str]]:
+    with open(path, newline="") as file:
+        return [
+            list(filter(None, row)) for row in csv.reader(file, delimiter=delimiter)
+        ]
 
 
-def create_distances_matrix(list_of_rows):
-    matrix = [[None] * INDIVIDUAL_SIZE for _ in range(INDIVIDUAL_SIZE)]
-    for i in range(INDIVIDUAL_SIZE):
-        for j in range(INDIVIDUAL_SIZE):
-            if j <= i:
-                matrix[i][j] = int(list_of_rows[i + 1][j])
-            else:
-                matrix[i][j] = int(list_of_rows[j + 1][i])
+def create_distances_matrix(data: List[List[int]]) -> List[List[int]]:
+    size = int(data[0][0])
+    matrix = [[None] * size for _ in range(size)]
+    for x in range(size):
+        for y in range(size):
+            try:
+                matrix[x][y] = int(data[x + 1][y])
+            except IndexError:
+                matrix[x][y] = int(data[y + 1][x])
     return matrix
-
 
 def generate_population_array():
     array = []
@@ -70,31 +87,46 @@ def tournament_selection(population, scores) -> List:
     for index in random_indexes:
         if scores[index] < best_score:
             best_individual = population[index]
+            best_score = scores[index]
 
     return best_individual
 
 
-def single_point_crossover(individualA: List, individualB: List):
+def single_point_crossover(individual_a: List, individual_b: List):
     x = random.randint(0, INDIVIDUAL_SIZE)
 
-    new_individualA = individualA[:x] + individualB[x:]
-    new_individualB = individualB[:x] + individualA[x:]
+    new_individual_a = individual_a[:x] + individual_b[x:]
+    new_individual_b = individual_b[:x] + individual_a[x:]
 
-    return new_individualA, new_individualB
+    return new_individual_a, new_individual_b
 
 
-def makeSinglePointCrossover(population: List):
+def make_single_point_crossover(population: List):
     for i in range(0, INDIVIDUAL_SIZE - 1, 2):
-        population[i], population[i + 1] = single_point_crossover(population[i], population[i+1])
+        population[i], population[i + 1] = single_point_crossover(population[i], population[i + 1])
 
 
-def perform_mutation(individual):
-    if random.random() < MUTATION_PROBABILITY:
-        subversion_indexes = random.sample(
-            range(0, INDIVIDUAL_SIZE), 2)
-        individual[subversion_indexes[0]], individual[subversion_indexes[1]] = individual[subversion_indexes[1]], individual[subversion_indexes[0]]
+def inversion_mutation(individual):
+    rand = random.randint(0, int(INDIVIDUAL_SIZE * MUTATION_RATE))
+    x = random.randint(0, rand)
+    y = random.randint(x, INDIVIDUAL_SIZE)
 
-    return individual
+    new_individual = []
+    new_individual.extend(individual[y:])
+    new_individual.extend(individual[x:y])
+    new_individual.extend(individual[:x])
+
+    return new_individual
+
+
+def perform_mutation(population):
+    for i in range(POPULATION_SIZE):
+        population[i] = inversion_mutation(population[i])
+
+
+def get_random_index(min: int, max: int) -> int:
+    """Inclusive for both min and max"""
+    return random.randint(min, max)
 
 
 def tsa(population):
@@ -103,24 +135,25 @@ def tsa(population):
     for i in range(0, POPULATION_SIZE):
         population[i] = tournament_selection(population, scores)
 
-    makeSinglePointCrossover(population)
+    make_single_point_crossover(population)
 
-    for i in range(0, POPULATION_SIZE):
-        population[i] = perform_mutation(population[i])
+    perform_mutation(population)
 
     return population
 
 
 list_of_rows = load_data('berlin52.txt')
 INDIVIDUAL_SIZE = int(list_of_rows[0][0])
-POPULATION_SIZE = 200
-MUTATION_PROBABILITY = 0.3
+POPULATION_SIZE = 250
+MUTATION_PROBABILITY = 0.05
 SELECTIVE_PRESSURE = 3
 DISTANCE_MATRIX = create_distances_matrix(list_of_rows)
+EPOCHS = 10000
+MUTATION_RATE = 0.03
 
 population = generate_population_array()
 best_score = sys.maxsize
-for i in range(1000):
+for i in range(EPOCHS):
 
     population = tsa(population)
     current_score = find_best_score(population)
