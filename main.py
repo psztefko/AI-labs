@@ -1,20 +1,22 @@
 import csv
 import random
 import sys
-from typing import List
+from typing import List, Tuple
 
 
-def load_data(path):
+def load_data(path) -> List[List[str]]:
+    """Load data from file"""
     list_of_rows = []
-    with open(path, newline='') as file:
-        csv_reader = csv.reader(file, delimiter=' ')
+    with open(path, newline="") as file:
+        csv_reader = csv.reader(file, delimiter=" ")
         for row in csv_reader:
             list_of_rows.append(row)
 
     return list_of_rows
 
 
-def create_distances_matrix(list_of_rows):
+def create_distances_matrix(list_of_rows) -> List[List[int]]:
+    """Creates distance matrix from txt file"""
     matrix = [[None] * INDIVIDUAL_SIZE for _ in range(INDIVIDUAL_SIZE)]
     for i in range(INDIVIDUAL_SIZE):
         for j in range(INDIVIDUAL_SIZE):
@@ -25,7 +27,8 @@ def create_distances_matrix(list_of_rows):
     return matrix
 
 
-def generate_population_array():
+def generate_population_array() -> List[List[int]]:
+    """Creates random populaiton array"""
     array = []
     population = []
     for i in range(INDIVIDUAL_SIZE):
@@ -36,7 +39,8 @@ def generate_population_array():
     return population
 
 
-def count_population_scores(population: List) -> List:
+def count_population_scores(population: List) -> List[int]:
+    """Returns list of scores corresponding to the values in population"""
     scores = []
     for individual in population:
         sum = 0
@@ -49,11 +53,11 @@ def count_population_scores(population: List) -> List:
 
 
 def tournament_selection(population, scores) -> List:
+    """Return individual with best score (1 out of SELECTIVE PRESSURE)"""
     best_individual = []
     best_score = sys.maxsize
 
-    random_indexes = random.sample(
-        range(0, POPULATION_SIZE), SELECTIVE_PRESSURE)
+    random_indexes = random.sample(range(0, POPULATION_SIZE), SELECTIVE_PRESSURE)
 
     for index in random_indexes:
         if scores[index] < best_score:
@@ -62,7 +66,7 @@ def tournament_selection(population, scores) -> List:
     return best_individual
 
 
-def add_at_first_found_none(l: List[any], value: any) -> List[any]:
+def fill_first_none(l: List[any], value: any) -> List[any]:
     """If there is None in the list, return list with value at first found None"""
     for i, ele in enumerate(l):
         if ele is None:
@@ -70,8 +74,8 @@ def add_at_first_found_none(l: List[any], value: any) -> List[any]:
             return l
 
 
-def crossover(individual1, individual2):
-
+def crossover(individual1, individual2) -> Tuple[List[int], List[int]]:
+    """Performs pmx crossover"""
     a, b = random.sample(range(INDIVIDUAL_SIZE), 2)
     if a > b:
         a, b = b, a
@@ -92,12 +96,12 @@ def crossover(individual1, individual2):
             if work_lists[i][j] in child:
                 continue
             else:
-                add_at_first_found_none(child, work_lists[i][j])
+                fill_first_none(child, work_lists[i][j])
     return individual1, individual2
 
 
-def inversion_mutation(individual):
-
+def inversion_mutation(individual) -> List[int]:
+    """Swap individual indexes"""
     x = random.randint(0, INDIVIDUAL_SIZE - 1)
     y = random.randint(0, INDIVIDUAL_SIZE)
 
@@ -112,15 +116,17 @@ def inversion_mutation(individual):
     return new_individual
 
 
-def tsa(population):
+def run_genetic_algorithm(population) -> List[List[int]]:
 
     scores = count_population_scores(population)
 
-    population = [tournament_selection(population, scores) for _ in range(POPULATION_SIZE)]
+    population = [
+        tournament_selection(population, scores) for _ in range(POPULATION_SIZE)
+    ]
 
     for i in range(0, POPULATION_SIZE - 1, 2):
         if random.uniform(0, 1) > 0.75:
-            temp_tuple = (crossover(population[i], population[i + 1]))
+            temp_tuple = crossover(population[i], population[i + 1])
             population[i] = temp_tuple[0]
             population[i + 1] = temp_tuple[1]
 
@@ -129,7 +135,7 @@ def tsa(population):
     return population
 
 
-list_of_rows = load_data('berlin52.txt')
+list_of_rows = load_data("berlin52.txt")
 INDIVIDUAL_SIZE = int(list_of_rows[0][0])
 POPULATION_SIZE = 200
 MUTATION_PROBABILITY = 0.05
@@ -138,17 +144,16 @@ DISTANCE_MATRIX = create_distances_matrix(list_of_rows)
 EPOCHS = 10000
 
 population = generate_population_array()
-
 best_score = sys.maxsize
 for i in range(EPOCHS):
 
-    population = tsa(population)
+    population = run_genetic_algorithm(population)
     scores = count_population_scores(population)
     for score_index in range(len(scores)):
         if scores[score_index] < best_score:
             best_score = scores[score_index]
 
-    print(f'Generation: ', i + 1)
-    print(f'Score: ', best_score)
+    # print(f'Generation: ', i + 1)
+    # print(f'Score: ', best_score)
 
-print(f'Best score: ', best_score)
+print(f"Best score: ", best_score)
